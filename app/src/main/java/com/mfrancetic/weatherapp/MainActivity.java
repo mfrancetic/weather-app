@@ -2,12 +2,15 @@ package com.mfrancetic.weatherapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -37,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText enterCityEditText;
 
+    private ProgressBar loadingIndicator;
+
     private String cityName;
 
     private String weatherMain;
@@ -54,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
 
         weatherResultTextView = findViewById(R.id.weather_result);
         enterCityEditText = findViewById(R.id.enter_city_edit_text);
+        loadingIndicator = findViewById(R.id.loading_indicator);
+
+        loadingIndicator.setVisibility(View.GONE);
 
         if (savedInstanceState != null) {
             weatherText = savedInstanceState.getString(WEATHER_TEXT_KEY);
@@ -106,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
                 weatherText = getString(R.string.no_data_found);
             }
+            displayWeatherData(weatherText);
         }
     }
 
@@ -126,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkWeather(View view) {
         cityName = getCityName();
+        hideKeyboard();
         weatherData = getWeatherData(cityName);
-        displayWeatherData(weatherText);
     }
 
     private String getCityName() {
@@ -135,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getWeatherData(String cityName) {
+        loadingIndicator.setVisibility(View.VISIBLE);
         url = createWeatherUrl(cityName);
         try {
             weatherData = new WeatherAsyncTask().execute(url.toString()).get();
@@ -146,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displayWeatherData(String weatherText) {
+        loadingIndicator.setVisibility(View.GONE);
         weatherResultTextView.setText(weatherText);
     }
 
@@ -153,5 +164,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(WEATHER_TEXT_KEY, weatherText);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (inputMethodManager != null) {
+            inputMethodManager.hideSoftInputFromWindow(enterCityEditText.getWindowToken(), 0);
+        }
     }
 }
