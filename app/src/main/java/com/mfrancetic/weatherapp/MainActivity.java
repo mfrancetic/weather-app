@@ -5,8 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
@@ -25,28 +29,32 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String API_KEY_QUERY_PARAM = "APPID";
 
-    private static final String LONDON_QUERY = "London,uk";
-
-    private String apiResult;
+    private String weatherData;
 
     public URL url;
-    
+
+    private TextView weatherResultTextView;
+
+    private EditText enterCityEditText;
+
+    private String cityName;
+
+    private String weatherMain;
+
+    private String weatherDescription;
+
+    private String weatherText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        apiResult = "";
-        url = createWeatherUrl(LONDON_QUERY);
-
-        try {
-            apiResult = new WeatherAsyncTask().execute(url.toString()).get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        weatherResultTextView = findViewById(R.id.weather_result);
+        enterCityEditText = findViewById(R.id.enter_city_edit_text);
     }
 
-    public static class WeatherAsyncTask extends AsyncTask<String, Void, String> {
+    public class WeatherAsyncTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... urls) {
@@ -75,8 +83,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+                JSONArray jsonArray = jsonObject.getJSONArray("weather");
+                weatherText = "";
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject object = jsonArray.getJSONObject(i);
+                    weatherMain = object.getString("main");
+                    weatherDescription = object.getString("description");
+                    weatherText = weatherText + "\n" + weatherMain + ": " + weatherDescription;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                weatherText = getString(R.string.no_data_found);
+            }
         }
     }
 
@@ -93,5 +115,30 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return url;
+    }
+
+    public void checkWeather(View view) {
+        cityName = getCityName();
+        weatherData = getWeatherData(cityName);
+        displayWeatherData(weatherText);
+    }
+
+    private String getCityName() {
+        return enterCityEditText.getText().toString();
+    }
+
+    private String getWeatherData(String cityName) {
+        url = createWeatherUrl(cityName);
+        try {
+            weatherData = new WeatherAsyncTask().execute(url.toString()).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            weatherData = null;
+        }
+        return weatherData;
+    }
+
+    private void displayWeatherData(String weatherText) {
+        weatherResultTextView.setText(weatherText);
     }
 }
