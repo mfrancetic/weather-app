@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
     private String weatherText;
 
+    private static final String WEATHER_TEXT_KEY = "weatherText";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
 
         weatherResultTextView = findViewById(R.id.weather_result);
         enterCityEditText = findViewById(R.id.enter_city_edit_text);
+
+        if (savedInstanceState != null) {
+            weatherText = savedInstanceState.getString(WEATHER_TEXT_KEY);
+            displayWeatherData(weatherText);
+        }
     }
 
     public class WeatherAsyncTask extends AsyncTask<String, Void, String> {
@@ -140,5 +147,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void displayWeatherData(String weatherText) {
         weatherResultTextView.setText(weatherText);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(WEATHER_TEXT_KEY, weatherText);
     }
 }
