@@ -12,15 +12,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -112,7 +115,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                weatherText = getString(R.string.no_data_found);
+                weatherText = "";
+                Toast.makeText(MainActivity.this, getString(R.string.no_data_found), Toast.LENGTH_SHORT).show();
             }
             displayWeatherData(weatherText);
         }
@@ -134,9 +138,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void checkWeather(View view) {
-        cityName = getCityName();
         hideKeyboard();
-        weatherData = getWeatherData(cityName);
+        cityName = getCityName();
+
+        if (cityName.isEmpty()) {
+            weatherResultTextView.setText("");
+            Toast.makeText(MainActivity.this, getString(R.string.please_enter_city_name), Toast.LENGTH_SHORT).show();
+        } else {
+            String encodedCityName;
+            try {
+                encodedCityName = URLEncoder.encode(cityName, "UTF-8");
+                weatherData = getWeatherData(encodedCityName);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                Toast.makeText(this, getString(R.string.no_data_found), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     public String getCityName() {
@@ -145,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String getWeatherData(String cityName) {
         loadingIndicator.setVisibility(View.VISIBLE);
+
         url = createWeatherUrl(cityName);
         try {
             weatherData = new WeatherAsyncTask().execute(url.toString()).get();
