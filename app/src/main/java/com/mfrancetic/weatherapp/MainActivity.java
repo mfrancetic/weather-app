@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         weatherData = getWeatherData(cityName);
     }
 
-    private String getCityName() {
+    public String getCityName() {
         return enterCityEditText.getText().toString();
     }
 
